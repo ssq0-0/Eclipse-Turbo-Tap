@@ -1,0 +1,29 @@
+{
+  "name": "turbo-tap",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && mkdir -p dist/data && cp -R src/data/* dist/data",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@project-serum/anchor": "^0.26.0",
+    "@solana/web3.js": "^1.98.0",
+    "axios": "^1.7.9",
+    "bs58": "^6.0.0",
+    "ethers": "^6.13.5",
+    "http-proxy-agent": "^7.0.2",
+    "https-proxy-agent": "^7.0.6",
+    "inquirer": "^12.4.1",
+    "tweetnacl": "^1.0.3",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.16",
+    "typescript": "^5.7.3"
+  },
+  "description": ""
+}
