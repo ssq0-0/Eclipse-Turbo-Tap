@@ -1,0 +1,25 @@
+{
+    "_SETTINGS_en_version": "The fields that begin with '_' describe the purpose of each item",
+    "_max_threads_en":"The maximum number of threads that will run simultaneously. ",
+    "_min_time_work/max_time_work_en":"Minimum/maximum operating time of one wallet. A random number will be selected from this range. IS SPECIFIED IN MINUTES",
+    "_pause_range_en":"The range of time after which pauses will be made. For example, the account started at 00.00, the generated range is 4 minutes => the pause will be made after 4 minutes. SPECIFY IN SECONDS",
+    "_pause_time_en":"Time range for pause. A different pause time is generated each time. УКАЗЫВАТЬ В СЕКУНДАХ",
+    "_min_delay/max_delay_en":"Delay between clicks. Customisation... SPECIFY IN SECONDS",
+
+
+    "_SETTINGS_ru_version": "Поля, начинающиеся с '_', описывают назначение каждого элемента",
+    "_max_threads_ru": "Максимальное количество потоков, которые будут работать одновременно. ",
+    "_min_time_work/max_time_work_ru": "Минимальное/максимальное время работы одного кошелька. Будет выбрано случайное число из этого диапазона. УКАЗЫВАЕТСЯ В МИНУТАХ",
+    "_pause_range_ru": "Диапазон времени, после которого будут сделаны паузы. Например, аккаунт стартовал в 00.00, сгенерированный диапазон составляет 4 минуты => пауза будет сделана через 4 минуты после начала. УКАЖИТЕ В СЕКУНДАХ",
+    "_pause_time_ru": "Диапазон времени для паузы. Каждый раз генерируется разное время паузы. УКАЗЫВАТЬ В СЕКУНДАХ",
+    "_min_delay/max_delay_ru": "Задержка между нажатиями. Настраивается... УКАЗАТЬ В СЕКУНДАХ",
+
+
+    "max_threads":10,
+    "min_time_work":10,
+    "max_time_work":27,
+    "pause_range":[30,121],
+    "pause_time":[100,153],
+    "min_delay":0.39,
+    "max_delay":0.68
+}
