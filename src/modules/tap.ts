@@ -12,8 +12,7 @@ import {
 } from "@solana/web3.js";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { LoggerService } from "../logger/logger";
-import axios, { AxiosError } from "axios";
-import { getRandomUserAgent, generateDomainMintCookies } from "../utils/httpRequestUtils";
+import axios from "axios";
 import {
   DomainInfoResponse,
   TapIx,
@@ -24,9 +23,8 @@ import { sign } from "tweetnacl";
 import bs58 from "bs58";
 import { updateCsvRecord, CsvRecord } from "../utils/fileReader";
 import { pause } from "../utils/timeUtils";
-
-const DEFAULT_USER_AGENT =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+import { buildHeaders } from "./helpers";
+import { getRandomCookieGenerator, generateDomainMintCookies } from "../utils/userAccountUtils";
 
 export class TurboTap {
   private claimApi: string;
@@ -158,14 +156,9 @@ export class TurboTap {
   }
 
   private async onboardBackand(signature: string, acc: Account) {
+    // const cookie = this.getCookie(acc);
     const body = { signed_transaction: signature };
-    const headers = {
-      "Content-Type": "application/json",
-      "User-Agent": getRandomUserAgent(),
-      "Referer": this.domainRefer,
-      "Origin": this.originLink,
-      "Cookie": this.getUserDomainsCacheCookie(acc)
-    }
+    const headers = await this.buildDefaultHeaders(acc);
 
     const maxAttempts = 3; // Максимальное количество попыток
     let attempt = 0;
@@ -173,11 +166,10 @@ export class TurboTap {
 
     while (attempt < maxAttempts && !success) {
       try {
-        const response = await axios.post(this.onboardApi, body, { headers });
+        await axios.post(this.onboardApi, body, { headers });
         success = true;
       } catch (error) {
         attempt++;
-
         if (axios.isAxiosError(error)) {
           if (error.response) {
             console.warn(`Attempt ${attempt} failed: ${error.response.status}`);
@@ -219,7 +211,6 @@ export class TurboTap {
 
       const transaction = new Transaction();
       transaction.add(computeBudgetIx, tapIx);
-
       transaction.feePayer = acc.TPAddress;
 
       const signature = await this.sendTransaction(
@@ -237,19 +228,24 @@ export class TurboTap {
   }
 
   private async getDomainInfo(acc: Account): Promise<DomainInfoResponse> {
+    const headers = buildHeaders({
+      "User-Agent": acc.UserAgent,
+      "Referer": this.domainRefer,
+      "Origin": this.originLink,
+      "Cookie": generateDomainMintCookies(acc),
+      "Sec-Ch-Ua": acc.SecChUa,
+      "Sec-Ch-Ua-Platform": acc.Platform,
+      "Sentry-Trace": acc.SentryTrace,
+      "Baggage": acc.Baggage,
+    });
+
     try {
       const response = await axios.post<DomainInfoResponse>(
         this.claimApi,
         { pubkey: acc.SVMAddress },
         {
           httpsAgent: acc.Proxy ? new HttpsProxyAgent(acc.Proxy) : undefined,
-          headers: {
-            "Content-Type": "application/json",
-            "User-Agent": getRandomUserAgent(),
-            "Referer": this.domainRefer,
-            "Origin": this.originLink,
-            "Cookie": generateDomainMintCookies(acc)
-          }
+          headers: headers
         }
       );
       return response.data;
@@ -262,43 +258,6 @@ export class TurboTap {
     }
   }
 
-  private getUserDomainsCacheCookie(acc: Account): string {
-    const addressStr = acc.SVMAddress.toBase58();
-    const key = `${addressStr}:turbo`;
-    const domain = `${acc.Twitter || "unknown"}.turbo`;
-  
-    const userDomainsCache = {
-      [key]: [{ nameAccount: acc.SVMAddress.toBase58(), domain }],
-      [addressStr]: {
-        address: addressStr,
-        x: acc.Twitter || null,
-        discord: acc.Discord || null,
-      },
-      [domain]: [
-        { record: "Url", data: null },
-        { record: "IPFS", data: null },
-        { record: "ARWV", data: null },
-        { record: "SHDW", data: null },
-        { record: "SOL", data: null },
-        { record: "ETH", data: null },
-        { record: "BTC", data: null },
-        { record: "Lattica", data: null },
-        { record: "LTC", data: null },
-        { record: "DOGE", data: null },
-        { record: "Email", data: null },
-        { record: "Discord", data: acc.Discord || null },
-        { record: "Github", data: null },
-        { record: "Reddit", data: null },
-        { record: "Twitter", data: null },
-        { record: "Telegram", data: null },
-        { record: "Pic", data: null },
-      ],
-    };
-  
-    return `user_domains_cache=${encodeURIComponent(
-      JSON.stringify(userDomainsCache)
-    )}`;
-  }
 
   private async createDepositInstruction(acc: Account): Promise<DepositInstructions> {
     const [clickerInfo] = await PublicKey.findProgramAddress(
@@ -385,14 +344,16 @@ export class TurboTap {
     }
 
     if (!acc.Discord || !acc.Twitter) {
-      const { twitter_name, discord_id } = await this.getHandles(acc.SVMAddress.toBase58());
+      const { twitter_name, discord_id } = await this.getHandles(acc);
       acc.Twitter = twitter_name;
       acc.Discord = discord_id;
     }
    
-    const updateAcc = { ...acc };
-    await updateWalletConfigForAccount(updateAcc, this.logger);
-    const headers = this.getPointsHeaders(acc);
+    const headers = {
+      ...await this.buildDefaultHeaders(acc),
+      "Eclipse-Authorization": `Bearer ${acc.AuthToken}`,
+    };
+    await updateWalletConfigForAccount({ ...acc }, this.logger);
 
     try {
       const response = await axios.post(this.pointsApi, {}, { headers });
@@ -421,35 +382,6 @@ export class TurboTap {
     }
   }
 
-  private getLoginCookie(acc: Account): string {
-    const addressStr = acc.SVMAddress.toBase58();
-    const key = `${addressStr}:turbo`;
-    const domain = `${addressStr}.turbo`;
-    const value = [{ nameAccount: acc.Twitter || null, domain }];
-    const cookieValue = JSON.stringify({ [key]: value });
-    return `user_domains_cache=${encodeURIComponent(cookieValue)}`;
-  }
-
-  private getPointsCookie(acc: Account): string {
-    const loginCookie = this.getLoginCookie(acc);
-    
-    const walletTokens = { [acc.SVMAddress.toBase58()]: acc.AuthToken };
-    const walletCookie = `wallet_tokens_eclipse=${encodeURIComponent(JSON.stringify(walletTokens))}`;
-    return `${loginCookie}; ${walletCookie}`;
-  }
-
-  private getPointsHeaders(acc: Account): Record<string, string> {
-    return {
-      "Content-Type": "application/json",
-      "User-Agent": DEFAULT_USER_AGENT,
-      Cookie: this.getPointsCookie(acc),
-      Accept: "*/*",
-      "Accept-Encoding": "identity",
-      Origin: this.originLink,
-      Referer: this.domainRefer,
-      "eclipse-authorization": `Bearer ${acc.AuthToken}`
-    };
-  }
 
   private async signMessage(
     acc: Account
@@ -473,15 +405,8 @@ export class TurboTap {
     public_key: string
   ): Promise<{ token: string }> {
     const requestBody = { signed_message, original_message, public_key };
-    const headers = {
-      "Content-Type": "application/json",
-      "User-Agent": DEFAULT_USER_AGENT,
-      Cookie: this.getLoginCookie(acc),
-      Accept: "*/*",
-      "Accept-Encoding": "identity",
-      Origin: this.originLink,
-      Referer: this.domainRefer
-    };
+    const headers = await this.buildDefaultHeaders(acc);
+
 
     try {
       const response = await axios.post(this.loginApi, requestBody, { headers });
@@ -495,19 +420,12 @@ export class TurboTap {
     }
   }
 
-  private async getHandles(pubkey: string): Promise<{ twitter_name: string; discord_id: number }> {
-    try {
-      const requestBody = { pubkey };
-      const headers = {
-        "Content-Type": "application/json",
-        "User-Agent": DEFAULT_USER_AGENT,
-        Cookie: this.getLoginCookie({ SVMAddress: { toBase58: () => pubkey } } as Account),
-        Accept: "*/*",
-        "Accept-Encoding": "identity",
-        Origin: this.originLink,
-        Referer: this.domainRefer
-      };
+  private async getHandles(acc: Account): Promise<{ twitter_name: string; discord_id: number }> {
+    const pubkey = acc.SVMAddress.toString();
+    const requestBody = { pubkey };
+    const headers = await this.buildDefaultHeaders(acc);
 
+    try {
       const response = await axios.post(this.handlesApi, requestBody, { headers });
       const data = response.data;
       if (data.status !== "success" || !data.handle) {
@@ -553,5 +471,26 @@ export class TurboTap {
         await this.connection.confirmTransaction(txid, options?.preflightCommitment || "confirmed");
         return txid;
     }
+  }
+
+  private async getCookie(acc: Account): Promise<string> {
+    if (!acc.Cookie) {
+      acc.Cookie = getRandomCookieGenerator()(acc);
+    }
+    return acc.Cookie;
+  }
+
+  private async buildDefaultHeaders(acc: Account, extraHeaders: Record<string, string> = {}): Promise<Record<string, string>> {
+    const cookie = await this.getCookie(acc) 
+    return buildHeaders({
+      "Content-Type": "application/json",
+      "User-Agent": acc.UserAgent,
+      "Sentry-Trace": acc.SentryTrace,
+      "Baggage": acc.Baggage,
+      "Referer": this.domainRefer,
+      "Origin": this.originLink,
+      "Cookie": cookie,
+      ...extraHeaders,
+    });
   }
 }
