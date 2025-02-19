@@ -8,7 +8,7 @@ interface VersionInfo {
 
 const repo = {
     LinkRepo: "https://api.github.com/repos/ssq0-0/Eclipse-Turbo-Tap/releases/latest",
-    SoftVersion: "v0.1.0", 
+    SoftVersion: "v1.0.0", 
 };
 
 export async function checkVersion(logger: LoggerService): Promise<void> {
