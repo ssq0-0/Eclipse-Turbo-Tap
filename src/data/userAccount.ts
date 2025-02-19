@@ -9,6 +9,7 @@ import { WalletConfig, WalletConfigFile } from "../globals/interfaces/tap";
 import { pause } from "../utils/timeUtils";
 
 export type Account = {
+  DepositCount: number;
   SVMAddress: PublicKey;
   SMVpk: Keypair;
   TPAddress: PublicKey;
@@ -174,6 +175,7 @@ export async function AccountFactory(
       const { trace_id, sentry_trace, baggage } = createSentryTrace();
 
       return {
+        DepositCount: userConfig.deposit_count || null,
         SVMAddress: svmPublicKey,
         SMVpk: svmKeypair,
         TPAddress: tpPublicKey,

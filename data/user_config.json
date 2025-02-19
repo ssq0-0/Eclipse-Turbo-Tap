@@ -5,7 +5,7 @@
     "_pause_range_en":"The range of time after which pauses will be made. For example, the account started at 00.00, the generated range is 4 minutes => the pause will be made after 4 minutes. SPECIFY IN SECONDS",
     "_pause_time_en":"Time range for pause. A different pause time is generated each time. УКАЗЫВАТЬ В СЕКУНДАХ",
     "_min_delay/max_delay_en":"Delay between clicks. Customisation... SPECIFY IN SECONDS",
-
+    "_deposit_count_en": "If deposit is required specify 1 for 10k clicks, 5 for 50k clicks and 10 for 100k clicks.",
 
     "_SETTINGS_ru_version": "Поля, начинающиеся с '_', описывают назначение каждого элемента",
     "_max_threads_ru": "Максимальное количество потоков, которые будут работать одновременно. ",
@@ -13,13 +13,15 @@
     "_pause_range_ru": "Диапазон времени, после которого будут сделаны паузы. Например, аккаунт стартовал в 00.00, сгенерированный диапазон составляет 4 минуты => пауза будет сделана через 4 минуты после начала. УКАЖИТЕ В СЕКУНДАХ",
     "_pause_time_ru": "Диапазон времени для паузы. Каждый раз генерируется разное время паузы. УКАЗЫВАТЬ В СЕКУНДАХ",
     "_min_delay/max_delay_ru": "Задержка между нажатиями. Настраивается... УКАЗАТЬ В СЕКУНДАХ",
+    "_deposit_count_ru":"Если необходим депозит - указать 1 для 10к кликов, 5 для 50к кликов и 10 для 100к кликов.",
 
 
     "max_threads":10,
-    "min_time_work":10,
-    "max_time_work":27,
-    "pause_range":[30,121],
-    "pause_time":[100,153],
-    "min_delay":0.39,
-    "max_delay":0.68
+    "min_time_work":25,
+    "max_time_work":33,
+    "pause_range":[50,111],
+    "pause_time":[70,183],
+    "min_delay":0.41,
+    "max_delay":0.68,
+    "deposit_count":1
 }
