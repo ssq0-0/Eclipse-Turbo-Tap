@@ -9,6 +9,10 @@ export interface WalletConfig {
     discord_name: number | string;
     twitter_name: string;
     jwt: string;
+    platform: string;
+    secchua: string;
+    cookie: string;
+    user_agent: string;
 }
 
 export interface WalletConfigFile {
