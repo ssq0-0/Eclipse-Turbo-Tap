@@ -1,20 +1,20 @@
 {
-    "compilerOptions": {
-      "module": "CommonJS",
-      "resolveJsonModule": true,
-      "moduleResolution": "Node",
-      "target": "ES2022",
-      "esModuleInterop": true,
-      "forceConsistentCasingInFileNames": true,
-      "strict": true,
-      "skipLibCheck": true,
-      "outDir": "./dist", // Указываем папку для скомпилированных файлов
-      "rootDir": "./src"  // Указываем исходную папку
-    
-    },
-    "include": [
-      "src/**/*",
-      "src/config/user_config.json",
-      "src/config/dev_config.json"
-    ] 
+  "compilerOptions": {
+    "module": "CommonJS",
+    "resolveJsonModule": true,
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./dist", // Указываем папку для скомпилированных файлов
+    "rootDir": "./src"  // Указываем исходную папку
+  
+  },
+  "include": [
+    "src/**/*",
+    "src/config/user_config.json",
+    "src/config/dev_config.json"
+  ] 
 }
