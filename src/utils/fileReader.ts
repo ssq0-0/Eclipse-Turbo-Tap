@@ -59,7 +59,7 @@ export async function writeWalletConfig(config: WalletConfigFile, logger: Logger
     // Преобразуем объект в JSON с отступами для читаемости
     const json = JSON.stringify(config, null, 2);
     await fs.writeFile(filepath, json, 'utf-8');
-    logger.info(`Конфигурация кошелька успешно сохранена по пути: ${filepath}`);
+    // logger.info(`Конфигурация кошелька успешно сохранена по пути: ${filepath}`);
   } catch (error) {
     logger.error(`Ошибка при записи конфигурации кошелька: #{error}`);
     throw error;
@@ -126,7 +126,7 @@ export async function updateCsvRecord(newRecord: CsvRecord, logger: LoggerServic
   // Перезаписываем файл с обновлённым содержимым
   try {
     await writeFile(resolvedPath, csvContent, 'utf8');
-    logger.info(`CSV файл успешно обновлен: ${resolvedPath}`);
+    // logger.info(`CSV файл успешно обновлен: ${resolvedPath}`);
   } catch (error) {
     logger.error(`Ошибка при записи CSV файла: ${error}`);
     throw error;

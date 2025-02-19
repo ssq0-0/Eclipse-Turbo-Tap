@@ -10,6 +10,7 @@ import {ProcessAccounts} from "./process/action";
 import { userChoice } from "./utils/consoleUtils";
 import {printStartMessage} from "./utils/startMsg";
 import {checkVersion} from "./utils/version";
+import { pause } from "./utils/timeUtils";
 
 (async () => {
     try {
@@ -43,6 +44,9 @@ import {checkVersion} from "./utils/version";
       }
 
       const accounts = await AccountFactory(solPrivateKeys, tapPrivateKeys, walletConfig, userConfig, proxies, GlobalLogger, userChoiceResult);
+      GlobalLogger.info("Аккаунты инициализированы. Ждем 5 секунд...");
+      await pause(5000);
+  
       const modules = new TurboTap(
         "https://tap.eclipse.xyz/api/records/claim",
         "https://tap.eclipse.xyz/api/eclipse/user/onboard",

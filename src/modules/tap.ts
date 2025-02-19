@@ -156,7 +156,6 @@ export class TurboTap {
   }
 
   private async onboardBackand(signature: string, acc: Account) {
-    // const cookie = this.getCookie(acc);
     const body = { signed_transaction: signature };
     const headers = await this.buildDefaultHeaders(acc);
 
@@ -279,7 +278,7 @@ export class TurboTap {
     const transferIx = SystemProgram.transfer({
       fromPubkey: acc.SVMAddress,
       toPubkey: acc.TPAddress,
-      lamports: 508750
+      lamports: 500000 * acc.DepositCount
     });
 
     const details: IxDetail[] = [

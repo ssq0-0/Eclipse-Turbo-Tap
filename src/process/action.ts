@@ -123,42 +123,68 @@ async function performAction(
   const timeWorkMs = TimeWork * 60000; // Конвертация минут в миллисекунды
   let nextPauseTime = Date.now() + getRandomNumber(pause_range[0], pause_range[1]) * 1000;
 
-  while (Date.now() < startTime + timeWorkMs && retryCount < maxRetries) {
+    // Запускаем параллельно вызов tp.Action(acc, "Points") каждые 10 секунд
+    let runPoints = true;
+    const pointsTask = (async () => {
+      while (runPoints) {
+        try {
+          await tp.Action(acc, "Points");
+        } catch (err) {
+          logger.error(`[${SVMAddress.toBase58()}] Ошибка выполнения Points: ${err}`);
+        }
+        await pause(9999);
+      }
+    })();
+    
     try {
-
-      tp.Action(acc, moduleName);
-      retryCount = 0;
-
-      const delaySec = getRandomNumber(MinDelay, MaxDelay);
-      const delayMs = Math.round(delaySec * 1000);
-      logger.info(`[${SVMAddress.toBase58()}] Действие выполнено. Пауза на ${delaySec.toFixed(2)} сек`);
-      await pause(delayMs);
-    } catch (err) {
-      logger.error(`[${SVMAddress.toBase58()}] Ошибка выполнения: ${err}`);
-      retryCount++;
-
-      const delayAfterErrorSec = getRandomNumber(MinDelay, MaxDelay);
-      const delayAfterErrorMs = Math.round(delayAfterErrorSec * 1000);
-      logger.info(`[${SVMAddress.toBase58()}] Пауза на ${delayAfterErrorSec.toFixed(2)} сек после ошибки (попытка ${retryCount}/${maxRetries})`);
-      await pause(delayAfterErrorMs);
+      while (Date.now() < startTime + timeWorkMs && retryCount < maxRetries) {
+        try {
+          tp.Action(acc, moduleName);
+          retryCount = 0;
+  
+          const delaySec = getRandomNumber(MinDelay, MaxDelay);
+          const delayMs = Math.round(delaySec * 1000);
+          logger.info(`[${SVMAddress.toBase58()}] Действие выполнено. Пауза на ${delaySec.toFixed(2)} сек`);
+          await pause(delayMs);
+        } catch (err) {
+          logger.error(`[${SVMAddress.toBase58()}] Ошибка выполнения: ${err}`);
+          retryCount++;
+  
+          const delayAfterErrorSec = getRandomNumber(MinDelay, MaxDelay);
+          const delayAfterErrorMs = Math.round(delayAfterErrorSec * 1000);
+          logger.info(
+            `[${SVMAddress.toBase58()}] Пауза на ${delayAfterErrorSec.toFixed(
+              2
+            )} сек после ошибки (попытка ${retryCount}/${maxRetries})`
+          );
+          await pause(delayAfterErrorMs);
+        }
+  
+        // Проверяем, пора ли делать долгую паузу
+        if (Date.now() >= nextPauseTime) {
+          const pauseDuration = getRandomNumber(pause_time[0], pause_time[1]) * 1000;
+          logger.info(`[${SVMAddress.toBase58()}] Долгая пауза на ${pauseDuration / 1000} секунд`);
+          await pause(pauseDuration);
+  
+          // Устанавливаем новое время для следующей паузы
+          nextPauseTime = Date.now() + getRandomNumber(pause_range[0], pause_range[1]) * 1000;
+        }
+      }
+  
+      if (Date.now() >= startTime + timeWorkMs) {
+        logger.info(
+          `[${SVMAddress.toBase58()}] Время работы аккаунта истекло. Ждем 15 секунд доработки аккаунта.`
+        );
+        await pause(15000);
+      } else if (retryCount >= maxRetries) {
+        logger.warn(
+          `[${SVMAddress.toBase58()}] Превышено максимальное число неудачных попыток (${maxRetries}). Завершаем выполнение.`
+        );
+      }
+    } finally {
+      // Останавливаем задачу вызова Points
+      runPoints = false;
+      await pointsTask;
     }
-
-    // Проверяем, пора ли делать долгую паузу
-    if (Date.now() >= nextPauseTime) {
-      const pauseDuration = getRandomNumber(pause_time[0], pause_time[1]) * 1000;
-      logger.info(`[${SVMAddress.toBase58()}] Долгая пауза на ${pauseDuration / 1000} секунд`);
-      await pause(pauseDuration);
-
-      // Устанавливаем новое время для следующей паузы
-      nextPauseTime = Date.now() + getRandomNumber(pause_range[0], pause_range[1]) * 1000;
-    }
-  }
-
-  if (Date.now() >= startTime + timeWorkMs) {
-    logger.info(`[${SVMAddress.toBase58()}] Время работы аккаунта истекло. Ждем 15 секунд доработки аккаунта.`);
-    await pause(15000);
-  } else if (retryCount >= maxRetries) {
-    logger.warn(`[${SVMAddress.toBase58()}] Превышено максимальное число неудачных попыток (${maxRetries}). Завершаем выполнение.`);
-  }
 }
 
