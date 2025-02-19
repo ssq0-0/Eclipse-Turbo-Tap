@@ -136,7 +136,7 @@ async function performAction(
       }
     })();
     
-    try {
+    try { 
       while (Date.now() < startTime + timeWorkMs && retryCount < maxRetries) {
         try {
           tp.Action(acc, moduleName);
